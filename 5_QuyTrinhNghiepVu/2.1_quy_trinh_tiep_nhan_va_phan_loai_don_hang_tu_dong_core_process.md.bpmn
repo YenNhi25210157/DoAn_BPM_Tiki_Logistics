@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_tiki_logistics" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.22.0">
+  <bpmn:collaboration id="Collaboration_tiki_logistics">
+    <bpmn:participant id="Participant_tiki_logistics" name="Trung tâm Phân loại Tiki Logistics" processRef="Process_tiki_logistics" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_tiki_logistics" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_tiki_logistics">
+      <bpmn:lane id="Lane_receiving_staff" name="Nhân viên Bãi nhập (Receiving Staff)">
+        <bpmn:flowNodeRef>Start_Truck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Unload</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Appearance</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Refuse</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Scan_PDA</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Barcode</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Conveyor_Main</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Rework_Barcode</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Return_Seller</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_automated_wms" name="Hệ thống Tự động &#38; WMS (Automated System &#38; WMS)">
+        <bpmn:flowNodeRef>Task_DWS_Measure</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Oversize</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Oversize_Bypass</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Camera_Read</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Read_Region</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Reject_Manual</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Route_Analyze</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AND_Split</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_API_WMS</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_WMS_API</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Log_Retry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Hold_Rework_IT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Rework_IT</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Move_Chute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Chute_Full</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Overflow_Chute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Push_Chute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AND_Join</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_dispatch_staff" name="Nhân viên Xuất kho (Dispatch Staff)">
+        <bpmn:flowNodeRef>Task_Collect_Bag</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Cross_Check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Route_Match</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Route_Error</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Route_Error</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Load_Truck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Final</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Truck" name="Xe tải chở hàng đến và hạ hàng tại bãi tiếp nhận">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Task_Unload" name="Task 1.1: Dỡ hàng và kiểm tra ngoại quan kiện hàng">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Appearance" name="XOR 1: Ngoại quan nguyên vẹn?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Refuse" name="Task 1.2: Lập biên bản từ chối nhận hàng">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Scan_PDA" name="Task 1.3: Quét mã vạch bằng máy PDA">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Barcode" name="XOR 2: Mã vạch hợp lệ / Đọc được?">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Conveyor_Main" name="Task 1.5: Đưa kiện hàng lên băng chuyền tự động luồng chính">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:incoming>Flow_1ni6ol2</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_DWS_Measure" name="Task 2.1: Cảm biến DWS đo tự động kích thước và trọng lượng">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Oversize" name="XOR 3: Kiện hàng bị Quá khổ (Oversize)?">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Oversize_Bypass" name="Task 2.2: Tách sang băng chuyền phụ / Xe nâng chở hàng cồng kềnh">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Camera_Read" name="Task 2.3: Camera quang học đọc mã vùng giao hàng">
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_15</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Read_Region" name="XOR 4: Đọc thành công mã vùng?">
+      <bpmn:incoming>Flow_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_16</bpmn:outgoing>
+      <bpmn:outgoing>Flow_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Reject_Manual" name="Task 2.4: Băng chuyền gạt hàng ra máng Reject &#38; Nhập mã thủ công">
+      <bpmn:incoming>Flow_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_17</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Route_Analyze" name="Task 2.5: Hệ thống phân tích tuyến đường đích">
+      <bpmn:incoming>Flow_17</bpmn:incoming>
+      <bpmn:incoming>Flow_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_19</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:parallelGateway id="Gateway_AND_Split" name="Gateway 5: AND Split - Song song">
+      <bpmn:incoming>Flow_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_20</bpmn:outgoing>
+      <bpmn:outgoing>Flow_27</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="Task_API_WMS" name="Task 1A: Gửi API đồng bộ trạng thái kiện hàng lên WMS">
+      <bpmn:incoming>Flow_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_21</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_WMS_API" name="XOR 6: Kết nối API WMS thành công?">
+      <bpmn:incoming>Flow_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_22</bpmn:outgoing>
+      <bpmn:outgoing>Flow_25</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Log_Retry" name="Task 1B: Lưu log &#38; Retry (tối đa 3 lần)">
+      <bpmn:incoming>Flow_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_23</bpmn:outgoing>
+      <bpmn:outgoing>Flow_26</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Hold_Rework_IT" name="Cảnh báo IT + Hold Signal (Đẩy ra Rework IT)">
+      <bpmn:incoming>Flow_23</bpmn:incoming>
+      <bpmn:outgoing>Flow_24</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Rework_IT" name="Hủy xử lý - Lỗi IT">
+      <bpmn:incoming>Flow_24</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_Move_Chute" name="Task 2A: Băng chuyền di chuyển kiện hàng đến vị trí máng trượt đích">
+      <bpmn:incoming>Flow_27</bpmn:incoming>
+      <bpmn:incoming>Flow_30</bpmn:incoming>
+      <bpmn:outgoing>Flow_28</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Chute_Full" name="XOR 7: Cảm biến kiểm tra máng trượt bị ĐẦY?">
+      <bpmn:incoming>Flow_28</bpmn:incoming>
+      <bpmn:outgoing>Flow_29</bpmn:outgoing>
+      <bpmn:outgoing>Flow_30</bpmn:outgoing>
+      <bpmn:outgoing>Flow_32</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Overflow_Chute" name="Task 2B: Đẩy ra máng xả tràn &#38; Phân loại thủ công">
+      <bpmn:incoming>Flow_29</bpmn:incoming>
+      <bpmn:outgoing>Flow_31</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Push_Chute" name="Task 2C: Tay gạt tự động đẩy kiện hàng xuống máng trượt">
+      <bpmn:incoming>Flow_32</bpmn:incoming>
+      <bpmn:outgoing>Flow_33</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:parallelGateway id="Gateway_AND_Join" name="Gateway 8: AND Join - Hợp nhất">
+      <bpmn:incoming>Flow_25</bpmn:incoming>
+      <bpmn:incoming>Flow_26</bpmn:incoming>
+      <bpmn:incoming>Flow_31</bpmn:incoming>
+      <bpmn:incoming>Flow_33</bpmn:incoming>
+      <bpmn:outgoing>Flow_34</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="Task_Collect_Bag" name="Task 3.1: Thu gom hàng từ máng trượt, đóng túi &#38; niêm phong">
+      <bpmn:incoming>Flow_34</bpmn:incoming>
+      <bpmn:outgoing>Flow_35</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Cross_Check" name="Task 3.2: Dùng PDA quét Cross-check mã túi với Lịch xe tải">
+      <bpmn:incoming>Flow_35</bpmn:incoming>
+      <bpmn:outgoing>Flow_36</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Route_Match" name="XOR 9: Mã túi khớp với lịch trình xe?">
+      <bpmn:incoming>Flow_36</bpmn:incoming>
+      <bpmn:outgoing>Flow_37</bpmn:outgoing>
+      <bpmn:outgoing>Flow_39</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Route_Error" name="Task 3.3: Chuyển sang Khu vực xử lý sai lệch định tuyến">
+      <bpmn:incoming>Flow_37</bpmn:incoming>
+      <bpmn:outgoing>Flow_38</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Route_Error" name="End Event phụ: Chờ xử lý">
+      <bpmn:incoming>Flow_38</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_Load_Truck" name="Task 3.4: Xếp túi hàng/Pallet vào khu vực chờ tải xe chặng cuối">
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+      <bpmn:incoming>Flow_39</bpmn:incoming>
+      <bpmn:outgoing>Flow_40</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Final" name="End Event Final: Sẵn sàng bàn giao cho xe chặng cuối">
+      <bpmn:incoming>Flow_40</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_Truck" targetRef="Task_Unload" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Unload" targetRef="Gateway_Appearance" />
+    <bpmn:sequenceFlow id="Flow_3" name="KHÔNG (Móp/Rách)" sourceRef="Gateway_Appearance" targetRef="Task_Refuse" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_Refuse" targetRef="End_Return_Seller" />
+    <bpmn:sequenceFlow id="Flow_5" name="CÓ" sourceRef="Gateway_Appearance" targetRef="Task_Scan_PDA" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_Scan_PDA" targetRef="Gateway_Barcode" />
+    <bpmn:sequenceFlow id="Flow_7" name="KHÔNG (Lỗi/Mờ)" sourceRef="Gateway_Barcode" targetRef="Task_Rework_Barcode" />
+    <bpmn:sequenceFlow id="Flow_9" name="CÓ" sourceRef="Gateway_Barcode" targetRef="Task_Conveyor_Main" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_Conveyor_Main" targetRef="Task_DWS_Measure" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_DWS_Measure" targetRef="Gateway_Oversize" />
+    <bpmn:sequenceFlow id="Flow_12" name="CÓ" sourceRef="Gateway_Oversize" targetRef="Task_Oversize_Bypass" />
+    <bpmn:sequenceFlow id="Flow_13" name="Bypass phân loại" sourceRef="Task_Oversize_Bypass" targetRef="Task_Load_Truck" />
+    <bpmn:sequenceFlow id="Flow_14" name="KHÔNG" sourceRef="Gateway_Oversize" targetRef="Task_Camera_Read" />
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Task_Camera_Read" targetRef="Gateway_Read_Region" />
+    <bpmn:sequenceFlow id="Flow_16" name="KHÔNG (No-read)" sourceRef="Gateway_Read_Region" targetRef="Task_Reject_Manual" />
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="Task_Reject_Manual" targetRef="Task_Route_Analyze" />
+    <bpmn:sequenceFlow id="Flow_18" name="CÓ" sourceRef="Gateway_Read_Region" targetRef="Task_Route_Analyze" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Task_Route_Analyze" targetRef="Gateway_AND_Split" />
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="Gateway_AND_Split" targetRef="Task_API_WMS" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="Task_API_WMS" targetRef="Gateway_WMS_API" />
+    <bpmn:sequenceFlow id="Flow_22" name="Thất bại" sourceRef="Gateway_WMS_API" targetRef="Task_Log_Retry" />
+    <bpmn:sequenceFlow id="Flow_23" sourceRef="Task_Log_Retry" targetRef="Task_Hold_Rework_IT" />
+    <bpmn:sequenceFlow id="Flow_24" sourceRef="Task_Hold_Rework_IT" targetRef="End_Rework_IT" />
+    <bpmn:sequenceFlow id="Flow_25" name="Thành công" sourceRef="Gateway_WMS_API" targetRef="Gateway_AND_Join" />
+    <bpmn:sequenceFlow id="Flow_26" name="Gửi lại thành công" sourceRef="Task_Log_Retry" targetRef="Gateway_AND_Join" />
+    <bpmn:sequenceFlow id="Flow_27" sourceRef="Gateway_AND_Split" targetRef="Task_Move_Chute" />
+    <bpmn:sequenceFlow id="Flow_28" sourceRef="Task_Move_Chute" targetRef="Gateway_Chute_Full" />
+    <bpmn:sequenceFlow id="Flow_29" name="CÓ (Đầy, Số vòng &#62; 2)" sourceRef="Gateway_Chute_Full" targetRef="Task_Overflow_Chute" />
+    <bpmn:sequenceFlow id="Flow_30" name="Số vòng &#60;= 2" sourceRef="Gateway_Chute_Full" targetRef="Task_Move_Chute" />
+    <bpmn:sequenceFlow id="Flow_31" sourceRef="Task_Overflow_Chute" targetRef="Gateway_AND_Join" />
+    <bpmn:sequenceFlow id="Flow_32" name="KHÔNG" sourceRef="Gateway_Chute_Full" targetRef="Task_Push_Chute" />
+    <bpmn:sequenceFlow id="Flow_33" sourceRef="Task_Push_Chute" targetRef="Gateway_AND_Join" />
+    <bpmn:sequenceFlow id="Flow_34" sourceRef="Gateway_AND_Join" targetRef="Task_Collect_Bag" />
+    <bpmn:sequenceFlow id="Flow_35" sourceRef="Task_Collect_Bag" targetRef="Task_Cross_Check" />
+    <bpmn:sequenceFlow id="Flow_36" sourceRef="Task_Cross_Check" targetRef="Gateway_Route_Match" />
+    <bpmn:sequenceFlow id="Flow_37" name="KHÔNG (Sai tuyến)" sourceRef="Gateway_Route_Match" targetRef="Task_Route_Error" />
+    <bpmn:sequenceFlow id="Flow_38" sourceRef="Task_Route_Error" targetRef="End_Route_Error" />
+    <bpmn:sequenceFlow id="Flow_39" name="CÓ" sourceRef="Gateway_Route_Match" targetRef="Task_Load_Truck" />
+    <bpmn:sequenceFlow id="Flow_40" sourceRef="Task_Load_Truck" targetRef="End_Final" />
+    <bpmn:sequenceFlow id="Flow_1ni6ol2" sourceRef="Task_Rework_Barcode" targetRef="Task_Conveyor_Main" />
+    <bpmn:task id="Task_Rework_Barcode" name="Task 1.4: Chuyển ra Khu vực Rework dán lại tem">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ni6ol2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Return_Seller" name="End Event 1: Trả hàng về Nhà bán hàng">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_tiki_logistics">
+      <bpmndi:BPMNShape id="Participant_tiki_logistics_di" bpmnElement="Participant_tiki_logistics" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="3130" height="1200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_dispatch_staff_di" bpmnElement="Lane_dispatch_staff" isHorizontal="true">
+        <dc:Bounds x="180" y="980" width="3100" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_automated_wms_di" bpmnElement="Lane_automated_wms" isHorizontal="true">
+        <dc:Bounds x="180" y="480" width="3100" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_receiving_staff_di" bpmnElement="Lane_receiving_staff" isHorizontal="true">
+        <dc:Bounds x="180" y="80" width="3100" height="400" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Truck_di" bpmnElement="Start_Truck">
+        <dc:Bounds x="222" y="180" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="202" y="221" width="76" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Unload_di" bpmnElement="Task_Unload">
+        <dc:Bounds x="300" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Appearance_di" bpmnElement="Gateway_Appearance" isMarkerVisible="true">
+        <dc:Bounds x="460" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="416" y="228" width="68" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Refuse_di" bpmnElement="Task_Refuse">
+        <dc:Bounds x="560" y="270" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Scan_PDA_di" bpmnElement="Task_Scan_PDA">
+        <dc:Bounds x="560" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Barcode_di" bpmnElement="Gateway_Barcode" isMarkerVisible="true">
+        <dc:Bounds x="710" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="695" y="130" width="81" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Conveyor_Main_di" bpmnElement="Task_Conveyor_Main">
+        <dc:Bounds x="840" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DWS_Measure_di" bpmnElement="Task_DWS_Measure">
+        <dc:Bounds x="990" y="540" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Oversize_di" bpmnElement="Gateway_Oversize" isMarkerVisible="true">
+        <dc:Bounds x="1140" y="555" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1121" y="500" width="89" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Oversize_Bypass_di" bpmnElement="Task_Oversize_Bypass">
+        <dc:Bounds x="1115" y="670" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Camera_Read_di" bpmnElement="Task_Camera_Read">
+        <dc:Bounds x="1270" y="540" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Read_Region_di" bpmnElement="Gateway_Read_Region" isMarkerVisible="true">
+        <dc:Bounds x="1420" y="555" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1400" y="610" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Reject_Manual_di" bpmnElement="Task_Reject_Manual">
+        <dc:Bounds x="1420" y="670" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Route_Analyze_di" bpmnElement="Task_Route_Analyze">
+        <dc:Bounds x="1570" y="540" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AND_Split_di" bpmnElement="Gateway_AND_Split">
+        <dc:Bounds x="1720" y="555" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1700" y="610" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_API_WMS_di" bpmnElement="Task_API_WMS">
+        <dc:Bounds x="1840" y="500" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_WMS_API_di" bpmnElement="Gateway_WMS_API" isMarkerVisible="true">
+        <dc:Bounds x="1990" y="515" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1970" y="570" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Log_Retry_di" bpmnElement="Task_Log_Retry">
+        <dc:Bounds x="2120" y="500" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Hold_Rework_IT_di" bpmnElement="Task_Hold_Rework_IT">
+        <dc:Bounds x="2270" y="500" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Rework_IT_di" bpmnElement="End_Rework_IT">
+        <dc:Bounds x="2420" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2400" y="563" width="76" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Move_Chute_di" bpmnElement="Task_Move_Chute">
+        <dc:Bounds x="1840" y="780" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Chute_Full_di" bpmnElement="Gateway_Chute_Full" isMarkerVisible="true">
+        <dc:Bounds x="1990" y="795" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1970" y="850" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Overflow_Chute_di" bpmnElement="Task_Overflow_Chute">
+        <dc:Bounds x="2120" y="780" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Push_Chute_di" bpmnElement="Task_Push_Chute">
+        <dc:Bounds x="2270" y="780" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AND_Join_di" bpmnElement="Gateway_AND_Join">
+        <dc:Bounds x="2470" y="555" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2450" y="610" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Collect_Bag_di" bpmnElement="Task_Collect_Bag">
+        <dc:Bounds x="2590" y="1090" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Cross_Check_di" bpmnElement="Task_Cross_Check">
+        <dc:Bounds x="2720" y="1090" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Route_Match_di" bpmnElement="Gateway_Route_Match" isMarkerVisible="true">
+        <dc:Bounds x="2870" y="1105" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2846" y="1060" width="88" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Route_Error_di" bpmnElement="Task_Route_Error">
+        <dc:Bounds x="2870" y="1200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Route_Error_di" bpmnElement="End_Route_Error">
+        <dc:Bounds x="3020" y="1222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3000" y="1263" width="76" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Load_Truck_di" bpmnElement="Task_Load_Truck">
+        <dc:Bounds x="3000" y="1090" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Final_di" bpmnElement="End_Final">
+        <dc:Bounds x="3160" y="1112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3140" y="1153" width="76" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Rework_Barcode_di" bpmnElement="Task_Rework_Barcode">
+        <dc:Bounds x="730" y="270" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Return_Seller_di" bpmnElement="End_Return_Seller">
+        <dc:Bounds x="662" y="412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="568" y="410" width="84" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="238" y="198" />
+        <di:waypoint x="300" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="400" y="198" />
+        <di:waypoint x="460" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="485" y="223" />
+        <di:waypoint x="485" y="310" />
+        <di:waypoint x="560" y="310" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="431" y="316" width="58" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="610" y="270" />
+        <di:waypoint x="610" y="250" />
+        <di:waypoint x="680" y="250" />
+        <di:waypoint x="680" y="412" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="510" y="198" />
+        <di:waypoint x="560" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="660" y="198" />
+        <di:waypoint x="710" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="735" y="223" />
+        <di:waypoint x="735" y="247" />
+        <di:waypoint x="755" y="247" />
+        <di:waypoint x="755" y="270" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="757" y="250" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="760" y="198" />
+        <di:waypoint x="840" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="940" y="198" />
+        <di:waypoint x="965" y="198" />
+        <di:waypoint x="965" y="580" />
+        <di:waypoint x="990" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1090" y="580" />
+        <di:waypoint x="1140" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1165" y="605" />
+        <di:waypoint x="1165" y="670" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1165" y="750" />
+        <di:waypoint x="1165" y="920" />
+        <di:waypoint x="3050" y="920" />
+        <di:waypoint x="3050" y="1090" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <di:waypoint x="1190" y="580" />
+        <di:waypoint x="1270" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15">
+        <di:waypoint x="1370" y="580" />
+        <di:waypoint x="1420" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16">
+        <di:waypoint x="1445" y="605" />
+        <di:waypoint x="1445" y="670" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17">
+        <di:waypoint x="1520" y="710" />
+        <di:waypoint x="1545" y="710" />
+        <di:waypoint x="1545" y="580" />
+        <di:waypoint x="1570" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18">
+        <di:waypoint x="1470" y="580" />
+        <di:waypoint x="1570" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19">
+        <di:waypoint x="1670" y="580" />
+        <di:waypoint x="1720" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_20_di" bpmnElement="Flow_20">
+        <di:waypoint x="1745" y="555" />
+        <di:waypoint x="1745" y="540" />
+        <di:waypoint x="1840" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_21_di" bpmnElement="Flow_21">
+        <di:waypoint x="1940" y="540" />
+        <di:waypoint x="1990" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_22_di" bpmnElement="Flow_22">
+        <di:waypoint x="2040" y="540" />
+        <di:waypoint x="2120" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_23_di" bpmnElement="Flow_23">
+        <di:waypoint x="2220" y="540" />
+        <di:waypoint x="2270" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_24_di" bpmnElement="Flow_24">
+        <di:waypoint x="2370" y="540" />
+        <di:waypoint x="2420" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_25_di" bpmnElement="Flow_25">
+        <di:waypoint x="2015" y="515" />
+        <di:waypoint x="2015" y="450" />
+        <di:waypoint x="2495" y="450" />
+        <di:waypoint x="2495" y="555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_26_di" bpmnElement="Flow_26">
+        <di:waypoint x="2170" y="500" />
+        <di:waypoint x="2170" y="470" />
+        <di:waypoint x="2495" y="470" />
+        <di:waypoint x="2495" y="555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_27_di" bpmnElement="Flow_27">
+        <di:waypoint x="1745" y="605" />
+        <di:waypoint x="1745" y="820" />
+        <di:waypoint x="1840" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_28_di" bpmnElement="Flow_28">
+        <di:waypoint x="1940" y="820" />
+        <di:waypoint x="1990" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_29_di" bpmnElement="Flow_29">
+        <di:waypoint x="2040" y="820" />
+        <di:waypoint x="2120" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_30_di" bpmnElement="Flow_30">
+        <di:waypoint x="2015" y="845" />
+        <di:waypoint x="2015" y="900" />
+        <di:waypoint x="1790" y="900" />
+        <di:waypoint x="1790" y="820" />
+        <di:waypoint x="1840" y="820" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_31_di" bpmnElement="Flow_31">
+        <di:waypoint x="2220" y="820" />
+        <di:waypoint x="2495" y="820" />
+        <di:waypoint x="2495" y="605" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_32_di" bpmnElement="Flow_32">
+        <di:waypoint x="2015" y="795" />
+        <di:waypoint x="2015" y="750" />
+        <di:waypoint x="2240" y="750" />
+        <di:waypoint x="2240" y="780" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_33_di" bpmnElement="Flow_33">
+        <di:waypoint x="2370" y="820" />
+        <di:waypoint x="2495" y="820" />
+        <di:waypoint x="2495" y="605" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_34_di" bpmnElement="Flow_34">
+        <di:waypoint x="2520" y="580" />
+        <di:waypoint x="2550" y="580" />
+        <di:waypoint x="2550" y="1130" />
+        <di:waypoint x="2590" y="1130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_35_di" bpmnElement="Flow_35">
+        <di:waypoint x="2690" y="1130" />
+        <di:waypoint x="2720" y="1130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_36_di" bpmnElement="Flow_36">
+        <di:waypoint x="2820" y="1130" />
+        <di:waypoint x="2870" y="1130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_37_di" bpmnElement="Flow_37">
+        <di:waypoint x="2895" y="1155" />
+        <di:waypoint x="2895" y="1200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2898" y="1168" width="63" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_38_di" bpmnElement="Flow_38">
+        <di:waypoint x="2970" y="1240" />
+        <di:waypoint x="3020" y="1240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_39_di" bpmnElement="Flow_39">
+        <di:waypoint x="2920" y="1130" />
+        <di:waypoint x="3000" y="1130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_40_di" bpmnElement="Flow_40">
+        <di:waypoint x="3100" y="1130" />
+        <di:waypoint x="3160" y="1130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ni6ol2_di" bpmnElement="Flow_1ni6ol2">
+        <di:waypoint x="830" y="310" />
+        <di:waypoint x="890" y="310" />
+        <di:waypoint x="890" y="238" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
