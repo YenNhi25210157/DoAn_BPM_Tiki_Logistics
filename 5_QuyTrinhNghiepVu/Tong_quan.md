@@ -1,4 +1,4 @@
-KIẾN TRÚC QUY TRÌNH NGHIỆP VỤ TIKI LOGISTICS
+KIẾN TRÚC QUY TRÌNH NGHIỆP VỤ TIKI LOGISTICS (gôm có file.md quy trình và file.bpmn sơ đồ)
 1. Nhóm quy trình Quản lý (Management Processes)
 
 1.1. Quy trình Hoạch định tuyến đường giao vận tổng thể
