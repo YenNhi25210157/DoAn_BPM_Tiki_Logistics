@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_tms_routing" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.22.0">
+  <bpmn:collaboration id="Collaboration_tms_routing">
+    <bpmn:participant id="Participant_tms_routing" name="Quy trình Hoạch định tuyến đường giao vận tổng thể (Management Process)" processRef="Process_tms_routing" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_tms_routing" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_tms_routing">
+      <bpmn:lane id="Lane_tms_system" name="Hệ thống TMS (Transport Management System &#38; AI Route Planner)">
+        <bpmn:flowNodeRef>Start_Time</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Check_Data</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_GPS_Valid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Geographic_Clustering</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Priority</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Separate_Express</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Calc_Capacity</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Check_Capacity</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Hire_3PL</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Assign_Internal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VRP_Routing</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Check_Block</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Reroute_Parameters</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ETA_Simulation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Check_SLA</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Rebalance_Route</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Publish_Draft</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Broadcast_Manifest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Fail_Route</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Failure</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_dispatcher" name="Điều phối viên (Dispatcher)">
+        <bpmn:flowNodeRef>Task_Manual_Fix</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Check_Draft</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Dispatcher_Approve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Drag_Drop_Adjust</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Backup_Available</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Reassign_Backup</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_driver" name="Tài xế / Nhân viên giao nhận (Driver / Rider)">
+        <bpmn:flowNodeRef>Gateway_Driver_Confirm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Success</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Time" name="Đến giờ chạy chốt ca (Cut-off time), kéo đơn hàng từ OMS">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Task_Check_Data" name="Task 1.1: Quét và kiểm tra tính chuẩn hóa của dữ liệu">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_GPS_Valid" name="XOR 1: Dữ liệu tọa độ GPS / Địa chỉ có hợp lệ không?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Geographic_Clustering" name="Task 2.1: Phân tích và gom cụm các đơn hàng theo khu vực địa lý">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Priority" name="XOR 2: Trong cụm có chứa đơn hàng hỏa tốc (SLA &#60; 2h)?">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Separate_Express" name="Task 2.2: Tách riêng các đơn hỏa tốc, đẩy vào luồng định tuyến ưu tiên">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Calc_Capacity" name="Task 3.1: Tính toán tổng khối lượng và thể tích của cụm đơn tiêu chuẩn">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Check_Capacity" name="XOR 3: Tổng tải trọng có vượt quá sức chứa đội xe tải nội bộ?">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Hire_3PL" name="Task 3.2: Tự động tạo lệnh &#39;Thuê xe ngoài chờ xác nhận gán xe">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Assign_Internal" name="Task 3.3: Chỉ định phương tiện của công ty nội bộ đang sẵn sàng">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_VRP_Routing" name="Task 4.1: Áp dụng thuật toán VRP vẽ đường đi tối ưu (TSP)">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+      <bpmn:incoming>Flow_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_15</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Check_Block" name="XOR 4: Tuyến đường dự kiến có đi qua khu vực cấm tải / kẹt xe?">
+      <bpmn:incoming>Flow_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_16</bpmn:outgoing>
+      <bpmn:outgoing>Flow_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Reroute_Parameters" name="Task 4.2: Thiết lập lại thông số đường đi">
+      <bpmn:incoming>Flow_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_17</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_ETA_Simulation" name="Task 4.3: Mô phỏng dự phóng tổng thời gian hành trình từng điểm dừng">
+      <bpmn:incoming>Flow_18</bpmn:incoming>
+      <bpmn:incoming>Flow_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_19</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Check_SLA" name="XOR 5: Có điểm giao hàng nào có nguy cơ vi phạm giờ cam kết (Trễ SLA)?">
+      <bpmn:incoming>Flow_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_20</bpmn:outgoing>
+      <bpmn:outgoing>Flow_22</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Rebalance_Route" name="Task 4.4: Cắt giảm điểm dừng cuối cùng, đẩy sang chuyến sau (Re-balance)">
+      <bpmn:incoming>Flow_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_21</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Publish_Draft" name="Task 4.5: Xuất bản Kế hoạch Tuyến đường hoàn chỉnh (Draft Route Plan)">
+      <bpmn:incoming>Flow_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_23</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Broadcast_Manifest" name="Task 5.3: Phát lệnh đến App của Tài xế được chỉ định">
+      <bpmn:incoming>Flow_27</bpmn:incoming>
+      <bpmn:incoming>Flow_32</bpmn:incoming>
+      <bpmn:outgoing>Flow_28</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Fail_Route" name="Task 5.5: Đánh dấu &#39;Fail Route&#39;, lưu kho tạm giữ đơn và dời lịch ca sau">
+      <bpmn:incoming>Flow_33</bpmn:incoming>
+      <bpmn:outgoing>Flow_34</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Failure" name="End Event 2 (Thất bại): Hủy chuyến giao do thiếu nguồn lực tài xế">
+      <bpmn:incoming>Flow_34</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_Manual_Fix" name="Task 1.2: Cập nhật và tinh chỉnh lại tọa độ thủ công trên bản đồ">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Check_Draft" name="Task 5.1: Kiểm tra bản nháp Kế hoạch Tuyến đường trên Dashboard">
+      <bpmn:incoming>Flow_23</bpmn:incoming>
+      <bpmn:incoming>Flow_26</bpmn:incoming>
+      <bpmn:outgoing>Flow_24</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Dispatcher_Approve" name="XOR 6: Điều phối viên đồng ý phê duyệt toàn bộ tuyến đường?">
+      <bpmn:incoming>Flow_24</bpmn:incoming>
+      <bpmn:outgoing>Flow_25</bpmn:outgoing>
+      <bpmn:outgoing>Flow_27</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Drag_Drop_Adjust" name="Task 5.2: Kéo-Thả điều chỉnh điểm giao thủ công &#38; chốt cấu hình mới">
+      <bpmn:incoming>Flow_25</bpmn:incoming>
+      <bpmn:outgoing>Flow_26</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Backup_Available" name="XOR 8: Hub hiện tại có tài xế dự phòng (Backup Driver) sẵn sàng?">
+      <bpmn:incoming>Flow_30</bpmn:incoming>
+      <bpmn:outgoing>Flow_31</bpmn:outgoing>
+      <bpmn:outgoing>Flow_33</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Reassign_Backup" name="Task 5.4: Hủy lệnh cũ, gán lại chuyến cho tài xế dự phòng">
+      <bpmn:incoming>Flow_31</bpmn:incoming>
+      <bpmn:outgoing>Flow_32</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Driver_Confirm" name="XOR 7: Tài xế bấm &#39;Xác nhận nhận chuyến&#39; trên App trong 10 phút?">
+      <bpmn:incoming>Flow_28</bpmn:incoming>
+      <bpmn:outgoing>Flow_29</bpmn:outgoing>
+      <bpmn:outgoing>Flow_30</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="End_Success" name="End Event 1 (Thành công): Hoàn tất hoạch định, tài xế chuẩn bị nhận hàng">
+      <bpmn:incoming>Flow_29</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_Time" targetRef="Task_Check_Data" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Check_Data" targetRef="Gateway_GPS_Valid" />
+    <bpmn:sequenceFlow id="Flow_3" name="KHÔNG (Lỗi/Thiếu tọa độ)" sourceRef="Gateway_GPS_Valid" targetRef="Task_Manual_Fix" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_Manual_Fix" targetRef="Task_Check_Data" />
+    <bpmn:sequenceFlow id="Flow_5" name="CÓ" sourceRef="Gateway_GPS_Valid" targetRef="Task_Geographic_Clustering" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_Geographic_Clustering" targetRef="Gateway_Priority" />
+    <bpmn:sequenceFlow id="Flow_7" name="CÓ" sourceRef="Gateway_Priority" targetRef="Task_Separate_Express" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Task_Separate_Express" targetRef="Task_VRP_Routing" />
+    <bpmn:sequenceFlow id="Flow_9" name="KHÔNG" sourceRef="Gateway_Priority" targetRef="Task_Calc_Capacity" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_Calc_Capacity" targetRef="Gateway_Check_Capacity" />
+    <bpmn:sequenceFlow id="Flow_11" name="CÓ (Vượt tải)" sourceRef="Gateway_Check_Capacity" targetRef="Task_Hire_3PL" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_Hire_3PL" targetRef="Task_Assign_Internal" />
+    <bpmn:sequenceFlow id="Flow_13" name="KHÔNG (Đủ tải)" sourceRef="Gateway_Check_Capacity" targetRef="Task_Assign_Internal" />
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_Assign_Internal" targetRef="Task_VRP_Routing" />
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Task_VRP_Routing" targetRef="Gateway_Check_Block" />
+    <bpmn:sequenceFlow id="Flow_16" name="CÓ" sourceRef="Gateway_Check_Block" targetRef="Task_Reroute_Parameters" />
+    <bpmn:sequenceFlow id="Flow_17" sourceRef="Task_Reroute_Parameters" targetRef="Task_VRP_Routing" />
+    <bpmn:sequenceFlow id="Flow_18" name="KHÔNG" sourceRef="Gateway_Check_Block" targetRef="Task_ETA_Simulation" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Task_ETA_Simulation" targetRef="Gateway_Check_SLA" />
+    <bpmn:sequenceFlow id="Flow_20" name="CÓ (Trễ SLA)" sourceRef="Gateway_Check_SLA" targetRef="Task_Rebalance_Route" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="Task_Rebalance_Route" targetRef="Task_ETA_Simulation" />
+    <bpmn:sequenceFlow id="Flow_22" name="KHÔNG" sourceRef="Gateway_Check_SLA" targetRef="Task_Publish_Draft" />
+    <bpmn:sequenceFlow id="Flow_23" sourceRef="Task_Publish_Draft" targetRef="Task_Check_Draft" />
+    <bpmn:sequenceFlow id="Flow_24" sourceRef="Task_Check_Draft" targetRef="Gateway_Dispatcher_Approve" />
+    <bpmn:sequenceFlow id="Flow_25" name="KHÔNG (Cần chỉnh)" sourceRef="Gateway_Dispatcher_Approve" targetRef="Task_Drag_Drop_Adjust" />
+    <bpmn:sequenceFlow id="Flow_26" sourceRef="Task_Drag_Drop_Adjust" targetRef="Task_Check_Draft" />
+    <bpmn:sequenceFlow id="Flow_27" name="CÓ" sourceRef="Gateway_Dispatcher_Approve" targetRef="Task_Broadcast_Manifest" />
+    <bpmn:sequenceFlow id="Flow_28" sourceRef="Task_Broadcast_Manifest" targetRef="Gateway_Driver_Confirm" />
+    <bpmn:sequenceFlow id="Flow_29" name="CÓ (Xác nhận)" sourceRef="Gateway_Driver_Confirm" targetRef="End_Success" />
+    <bpmn:sequenceFlow id="Flow_30" name="KHÔNG" sourceRef="Gateway_Driver_Confirm" targetRef="Gateway_Backup_Available" />
+    <bpmn:sequenceFlow id="Flow_31" name="CÓ" sourceRef="Gateway_Backup_Available" targetRef="Task_Reassign_Backup" />
+    <bpmn:sequenceFlow id="Flow_32" sourceRef="Task_Reassign_Backup" targetRef="Task_Broadcast_Manifest" />
+    <bpmn:sequenceFlow id="Flow_33" name="KHÔNG" sourceRef="Gateway_Backup_Available" targetRef="Task_Fail_Route" />
+    <bpmn:sequenceFlow id="Flow_34" sourceRef="Task_Fail_Route" targetRef="End_Failure" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_tms_routing">
+      <bpmndi:BPMNShape id="Participant_tms_routing_di" bpmnElement="Participant_tms_routing" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="2850" height="1200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_driver_di" bpmnElement="Lane_driver" isHorizontal="true">
+        <dc:Bounds x="180" y="980" width="2820" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_dispatcher_di" bpmnElement="Lane_dispatcher" isHorizontal="true">
+        <dc:Bounds x="180" y="580" width="2820" height="400" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_tms_system_di" bpmnElement="Lane_tms_system" isHorizontal="true">
+        <dc:Bounds x="180" y="80" width="2820" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Time_di" bpmnElement="Start_Time">
+        <dc:Bounds x="222" y="180" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="215" y="113" width="90" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Check_Data_di" bpmnElement="Task_Check_Data">
+        <dc:Bounds x="300" y="158" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_GPS_Valid_di" bpmnElement="Gateway_GPS_Valid" isMarkerVisible="true">
+        <dc:Bounds x="460" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="444" y="123" width="83" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Geographic_Clustering_di" bpmnElement="Task_Geographic_Clustering">
+        <dc:Bounds x="580" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Priority_di" bpmnElement="Gateway_Priority" isMarkerVisible="true">
+        <dc:Bounds x="740" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="722" y="113" width="87" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Separate_Express_di" bpmnElement="Task_Separate_Express">
+        <dc:Bounds x="715" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Calc_Capacity_di" bpmnElement="Task_Calc_Capacity">
+        <dc:Bounds x="870" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Check_Capacity_di" bpmnElement="Gateway_Check_Capacity" isMarkerVisible="true">
+        <dc:Bounds x="1030" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1011" y="113" width="88" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Hire_3PL_di" bpmnElement="Task_Hire_3PL">
+        <dc:Bounds x="1005" y="290" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Assign_Internal_di" bpmnElement="Task_Assign_Internal">
+        <dc:Bounds x="1170" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VRP_Routing_di" bpmnElement="Task_VRP_Routing">
+        <dc:Bounds x="1350" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Check_Block_di" bpmnElement="Gateway_Check_Block" isMarkerVisible="true">
+        <dc:Bounds x="1510" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1491" y="113" width="88" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Reroute_Parameters_di" bpmnElement="Task_Reroute_Parameters">
+        <dc:Bounds x="1485" y="290" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ETA_Simulation_di" bpmnElement="Task_ETA_Simulation">
+        <dc:Bounds x="1650" y="158" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Check_SLA_di" bpmnElement="Gateway_Check_SLA" isMarkerVisible="true">
+        <dc:Bounds x="1810" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1793" y="107" width="85" height="66" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Rebalance_Route_di" bpmnElement="Task_Rebalance_Route">
+        <dc:Bounds x="1785" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Publish_Draft_di" bpmnElement="Task_Publish_Draft">
+        <dc:Bounds x="1950" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Broadcast_Manifest_di" bpmnElement="Task_Broadcast_Manifest">
+        <dc:Bounds x="2260" y="158" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Fail_Route_di" bpmnElement="Task_Fail_Route">
+        <dc:Bounds x="2710" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Failure_di" bpmnElement="End_Failure">
+        <dc:Bounds x="2880" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2860" y="353" width="76" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Manual_Fix_di" bpmnElement="Task_Manual_Fix">
+        <dc:Bounds x="435" y="670" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Check_Draft_di" bpmnElement="Task_Check_Draft">
+        <dc:Bounds x="1950" y="670" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Dispatcher_Approve_di" bpmnElement="Gateway_Dispatcher_Approve" isMarkerVisible="true">
+        <dc:Bounds x="2110" y="685" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2092" y="633" width="86" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Drag_Drop_Adjust_di" bpmnElement="Task_Drag_Drop_Adjust">
+        <dc:Bounds x="2085" y="800" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Backup_Available_di" bpmnElement="Gateway_Backup_Available" isMarkerVisible="true">
+        <dc:Bounds x="2560" y="685" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2540" y="740" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Reassign_Backup_di" bpmnElement="Task_Reassign_Backup">
+        <dc:Bounds x="2710" y="670" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Driver_Confirm_di" bpmnElement="Gateway_Driver_Confirm" isMarkerVisible="true">
+        <dc:Bounds x="2410" y="1105" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2390" y="1160" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Success_di" bpmnElement="End_Success">
+        <dc:Bounds x="2560" y="1112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2540" y="1153" width="76" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="258" y="198" />
+        <di:waypoint x="300" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="400" y="198" />
+        <di:waypoint x="460" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="485" y="223" />
+        <di:waypoint x="485" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="516" y="466" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="435" y="710" />
+        <di:waypoint x="350" y="710" />
+        <di:waypoint x="350" y="238" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="510" y="198" />
+        <di:waypoint x="580" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="680" y="198" />
+        <di:waypoint x="740" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="765" y="223" />
+        <di:waypoint x="765" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="765" y="370" />
+        <di:waypoint x="765" y="420" />
+        <di:waypoint x="1320" y="420" />
+        <di:waypoint x="1320" y="198" />
+        <di:waypoint x="1350" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="790" y="198" />
+        <di:waypoint x="870" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="970" y="198" />
+        <di:waypoint x="1030" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1055" y="223" />
+        <di:waypoint x="1055" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1105" y="330" />
+        <di:waypoint x="1140" y="330" />
+        <di:waypoint x="1140" y="198" />
+        <di:waypoint x="1170" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1080" y="198" />
+        <di:waypoint x="1170" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <di:waypoint x="1270" y="198" />
+        <di:waypoint x="1350" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15">
+        <di:waypoint x="1450" y="198" />
+        <di:waypoint x="1510" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16">
+        <di:waypoint x="1535" y="223" />
+        <di:waypoint x="1535" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17">
+        <di:waypoint x="1485" y="330" />
+        <di:waypoint x="1400" y="330" />
+        <di:waypoint x="1400" y="238" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18">
+        <di:waypoint x="1560" y="198" />
+        <di:waypoint x="1650" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19">
+        <di:waypoint x="1750" y="198" />
+        <di:waypoint x="1810" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_20_di" bpmnElement="Flow_20">
+        <di:waypoint x="1835" y="223" />
+        <di:waypoint x="1835" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_21_di" bpmnElement="Flow_21">
+        <di:waypoint x="1785" y="330" />
+        <di:waypoint x="1700" y="330" />
+        <di:waypoint x="1700" y="238" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_22_di" bpmnElement="Flow_22">
+        <di:waypoint x="1860" y="198" />
+        <di:waypoint x="1950" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_23_di" bpmnElement="Flow_23">
+        <di:waypoint x="2000" y="238" />
+        <di:waypoint x="2000" y="670" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_24_di" bpmnElement="Flow_24">
+        <di:waypoint x="2050" y="710" />
+        <di:waypoint x="2110" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_25_di" bpmnElement="Flow_25">
+        <di:waypoint x="2135" y="735" />
+        <di:waypoint x="2135" y="800" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2136" y="758" width="68" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_26_di" bpmnElement="Flow_26">
+        <di:waypoint x="2085" y="840" />
+        <di:waypoint x="1975" y="840" />
+        <di:waypoint x="1975" y="750" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_27_di" bpmnElement="Flow_27">
+        <di:waypoint x="2160" y="710" />
+        <di:waypoint x="2210" y="710" />
+        <di:waypoint x="2210" y="198" />
+        <di:waypoint x="2260" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_28_di" bpmnElement="Flow_28">
+        <di:waypoint x="2360" y="198" />
+        <di:waypoint x="2385" y="198" />
+        <di:waypoint x="2385" y="1130" />
+        <di:waypoint x="2410" y="1130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_29_di" bpmnElement="Flow_29">
+        <di:waypoint x="2460" y="1130" />
+        <di:waypoint x="2560" y="1130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_30_di" bpmnElement="Flow_30">
+        <di:waypoint x="2435" y="1105" />
+        <di:waypoint x="2435" y="710" />
+        <di:waypoint x="2560" y="710" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2449" y="898" width="41" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_31_di" bpmnElement="Flow_31">
+        <di:waypoint x="2610" y="710" />
+        <di:waypoint x="2710" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_32_di" bpmnElement="Flow_32">
+        <di:waypoint x="2810" y="710" />
+        <di:waypoint x="2830" y="710" />
+        <di:waypoint x="2830" y="130" />
+        <di:waypoint x="2310" y="130" />
+        <di:waypoint x="2310" y="158" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_33_di" bpmnElement="Flow_33">
+        <di:waypoint x="2585" y="685" />
+        <di:waypoint x="2585" y="330" />
+        <di:waypoint x="2710" y="330" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2599" y="498" width="41" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_34_di" bpmnElement="Flow_34">
+        <di:waypoint x="2810" y="330" />
+        <di:waypoint x="2880" y="330" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
