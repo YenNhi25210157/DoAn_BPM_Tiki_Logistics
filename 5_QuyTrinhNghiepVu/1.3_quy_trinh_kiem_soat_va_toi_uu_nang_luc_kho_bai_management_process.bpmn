@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_wms_capacity" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.22.0">
+  <bpmn:collaboration id="Collaboration_wms_capacity">
+    <bpmn:participant id="Participant_wms_capacity" name="Trung tâm Phân loại / Kho vận (Fulfillment Center) Tiki Logistics" processRef="Process_wms_capacity" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_wms_capacity" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_wms_capacity">
+      <bpmn:lane id="Lane_wms_system" name="Hệ thống Quản lý Kho (WMS &#38; AI Slotting System)">
+        <bpmn:flowNodeRef>Start_Forecast</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Calc_Occupancy</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Occupancy_Threshold</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Analyze_Characteristics</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Special_Storage</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Assign_Secure</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Assign_Standard</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Slot_Full</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Find_Alt_Slot</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ABC_Analysis</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Misplaced_Items</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Relocation_Plan</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Impact_Check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_WMS_Send_Command</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Barcode_Match</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Update_Inventory</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Cloud_Sync</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Sync_Retry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Success</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Update_Capacity</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Error_Beep</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_warehouse_manager" name="Quản lý Kho (Warehouse Manager / Capacity Planner)">
+        <bpmn:flowNodeRef>Task_Assess_Buffer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Buffer_Capacity</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Notify_Bottleneck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Bottleneck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Postpone_Relocation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Approve_Relocation</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_warehouse_operator" name="Nhân viên vận hành kho (Warehouse Operator / Forklift Driver)">
+        <bpmn:flowNodeRef>Task_Operator_Move</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Forecast" name="Bắt đầu ca làm việc, nhận bản dự báo lượng hàng nhập (Inbound Forecast) từ OMS">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Task_Calc_Occupancy" name="Task 1.1: Tính toán Tỷ lệ lấp đầy kho (Occupancy Rate) hiện tại và dự phóng">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Occupancy_Threshold" name="XOR 1: Tỷ lệ lấp đầy dự kiến có vượt ngưỡng an toàn (&#62; 85%) không?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Analyze_Characteristics" name="Task 2.1: Phân tích đặc tính hàng hóa (Kích thước, Khối lượng, Điều kiện bảo quản)">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Special_Storage" name="XOR 3: Hàng hóa có yêu cầu bảo quản đặc biệt (Hàng giá trị cao/lạnh) không?">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+      <bpmn:outgoing>Flow_13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Assign_Secure" name="Task 2.2: Chỉ định vị trí lưu trữ khu vực lồng bảo mật hoặc Kho lạnh">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Assign_Standard" name="Task 2.3: Chỉ định vị trí lưu trữ tại khu vực kệ tiêu chuẩn (Standard Racks)">
+      <bpmn:incoming>Flow_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Slot_Full" name="XOR 4: Vị trí lưu trữ được chỉ định có đang bị ĐẦY (Full) cục bộ không?">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+      <bpmn:incoming>Flow_14</bpmn:incoming>
+      <bpmn:incoming>Flow_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_15</bpmn:outgoing>
+      <bpmn:outgoing>Flow_17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Find_Alt_Slot" name="Task 2.4: Kích hoạt thuật toán tìm kiếm Vị trí trống thay thế gần nhất">
+      <bpmn:incoming>Flow_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_16</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_ABC_Analysis" name="Task 3.1: Chạy thuật toán AI phân tích tần suất xuất nhập (ABC Analysis) rà soát luồng">
+      <bpmn:incoming>Flow_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_18</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Misplaced_Items" name="XOR 5: Có phát hiện hàng hóa bị xếp sai luồng tối ưu không?">
+      <bpmn:incoming>Flow_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_19</bpmn:outgoing>
+      <bpmn:outgoing>Flow_20</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Relocation_Plan" name="Task 3.2: Lên phương án dồn kệ và tự động tạo Lệnh di dời (Relocation Task)">
+      <bpmn:incoming>Flow_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_21</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Impact_Check" name="XOR 6: Phương án di dời có tác động đến &#62; 10% công suất thiết bị của ca?">
+      <bpmn:incoming>Flow_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_22</bpmn:outgoing>
+      <bpmn:outgoing>Flow_24</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_WMS_Send_Command" name="Task 4.1: Phát lệnh điều chuyển xuống máy PDA của Nhân viên">
+      <bpmn:incoming>Flow_19</bpmn:incoming>
+      <bpmn:incoming>Flow_23</bpmn:incoming>
+      <bpmn:incoming>Flow_25</bpmn:incoming>
+      <bpmn:outgoing>Flow_26</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Barcode_Match" name="XOR 7: Mã vạch vị trí mới có khớp với Lệnh điều chuyển trên hệ thống không?">
+      <bpmn:incoming>Flow_27</bpmn:incoming>
+      <bpmn:outgoing>Flow_28</bpmn:outgoing>
+      <bpmn:outgoing>Flow_30</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Update_Inventory" name="Task 4.4: Khấu trừ không gian trống tại vị trí mới, giải phóng vị trí cũ">
+      <bpmn:incoming>Flow_30</bpmn:incoming>
+      <bpmn:outgoing>Flow_31</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Cloud_Sync" name="XOR 8: Dữ liệu bản đồ kho (Warehouse Map) đã đồng bộ thành công lên Cloud?">
+      <bpmn:incoming>Flow_31</bpmn:incoming>
+      <bpmn:incoming>Flow_33</bpmn:incoming>
+      <bpmn:outgoing>Flow_32</bpmn:outgoing>
+      <bpmn:outgoing>Flow_34</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Sync_Retry" name="Task 4.5: Lưu Log và tự động thử đồng bộ lại (Retry)">
+      <bpmn:incoming>Flow_32</bpmn:incoming>
+      <bpmn:outgoing>Flow_33</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Success" name="End Event 2 (Thành công): Năng lực kho bãi được tối ưu hóa, bản đồ đồng bộ Cloud">
+      <bpmn:incoming>Flow_34</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_Assess_Buffer" name="Task 1.2: Đánh giá tình hình và yêu cầu kích hoạt Bãi đệm dự phòng hoặc Kho phụ">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_Buffer_Capacity" name="XOR 2: Bãi đệm dự phòng có đủ sức chứa khả dụng không?">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_Notify_Bottleneck" name="Task 1.3: Phát cảnh báo &#39;Nút thắt cổ chai, tạm ngưng xe tải Inbound">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Bottleneck" name="End Event 1 (Thất bại): Tạm ngưng nhập hàng, chờ giải phóng kho">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_Postpone_Relocation" name="Task 3.3: Can thiệp từ chối thực thi ngay, dời lịch tối ưu sang ca đêm">
+      <bpmn:incoming>Flow_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_23</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Approve_Relocation" name="Task 3.4: Phê duyệt (Approve) phương án di dời ngay trong ca">
+      <bpmn:incoming>Flow_24</bpmn:incoming>
+      <bpmn:outgoing>Flow_25</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Operator_Move" name="Task 4.2: Lái xe nâng lấy hàng, đưa đến vị trí mới và quét Barcode của Kệ/Bin đích">
+      <bpmn:incoming>Flow_26</bpmn:incoming>
+      <bpmn:incoming>Flow_29</bpmn:incoming>
+      <bpmn:outgoing>Flow_27</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_Forecast" targetRef="Task_Calc_Occupancy" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Calc_Occupancy" targetRef="Gateway_Occupancy_Threshold" />
+    <bpmn:sequenceFlow id="Flow_3" name="CÓ (Vượt ngưỡng)" sourceRef="Gateway_Occupancy_Threshold" targetRef="Task_Assess_Buffer" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_Assess_Buffer" targetRef="Gateway_Buffer_Capacity" />
+    <bpmn:sequenceFlow id="Flow_5" name="KHÔNG (Hết chỗ)" sourceRef="Gateway_Buffer_Capacity" targetRef="Task_Notify_Bottleneck" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_Notify_Bottleneck" targetRef="End_Bottleneck" />
+    <bpmn:sequenceFlow id="Flow_7" name="CÓ (Khả dụng)" sourceRef="Gateway_Buffer_Capacity" targetRef="Task_Update_Capacity" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Task_Update_Capacity" targetRef="Task_Analyze_Characteristics" />
+    <bpmn:sequenceFlow id="Flow_9" name="KHÔNG (An toàn)" sourceRef="Gateway_Occupancy_Threshold" targetRef="Task_Analyze_Characteristics" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_Analyze_Characteristics" targetRef="Gateway_Special_Storage" />
+    <bpmn:sequenceFlow id="Flow_11" name="CÓ" sourceRef="Gateway_Special_Storage" targetRef="Task_Assign_Secure" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_Assign_Secure" targetRef="Gateway_Slot_Full" />
+    <bpmn:sequenceFlow id="Flow_13" name="KHÔNG" sourceRef="Gateway_Special_Storage" targetRef="Task_Assign_Standard" />
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_Assign_Standard" targetRef="Gateway_Slot_Full" />
+    <bpmn:sequenceFlow id="Flow_15" name="CÓ (Đầy cục bộ)" sourceRef="Gateway_Slot_Full" targetRef="Task_Find_Alt_Slot" />
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_Find_Alt_Slot" targetRef="Gateway_Slot_Full" />
+    <bpmn:sequenceFlow id="Flow_17" name="KHÔNG (Còn trống)" sourceRef="Gateway_Slot_Full" targetRef="Task_ABC_Analysis" />
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="Task_ABC_Analysis" targetRef="Gateway_Misplaced_Items" />
+    <bpmn:sequenceFlow id="Flow_19" name="KHÔNG (Đã tối ưu)" sourceRef="Gateway_Misplaced_Items" targetRef="Task_WMS_Send_Command" />
+    <bpmn:sequenceFlow id="Flow_20" name="CÓ (Cần tối ưu)" sourceRef="Gateway_Misplaced_Items" targetRef="Task_Relocation_Plan" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="Task_Relocation_Plan" targetRef="Gateway_Impact_Check" />
+    <bpmn:sequenceFlow id="Flow_22" name="CÓ (Tác động lớn)" sourceRef="Gateway_Impact_Check" targetRef="Task_Postpone_Relocation" />
+    <bpmn:sequenceFlow id="Flow_23" sourceRef="Task_Postpone_Relocation" targetRef="Task_WMS_Send_Command" />
+    <bpmn:sequenceFlow id="Flow_24" name="KHÔNG (Tác động nhỏ)" sourceRef="Gateway_Impact_Check" targetRef="Task_Approve_Relocation" />
+    <bpmn:sequenceFlow id="Flow_25" sourceRef="Task_Approve_Relocation" targetRef="Task_WMS_Send_Command" />
+    <bpmn:sequenceFlow id="Flow_26" sourceRef="Task_WMS_Send_Command" targetRef="Task_Operator_Move" />
+    <bpmn:sequenceFlow id="Flow_27" sourceRef="Task_Operator_Move" targetRef="Gateway_Barcode_Match" />
+    <bpmn:sequenceFlow id="Flow_28" name="KHÔNG (Quét sai vị trí)" sourceRef="Gateway_Barcode_Match" targetRef="Task_Error_Beep" />
+    <bpmn:sequenceFlow id="Flow_29" sourceRef="Task_Error_Beep" targetRef="Task_Operator_Move" />
+    <bpmn:sequenceFlow id="Flow_30" name="CÓ (Đúng vị trí)" sourceRef="Gateway_Barcode_Match" targetRef="Task_Update_Inventory" />
+    <bpmn:sequenceFlow id="Flow_31" sourceRef="Task_Update_Inventory" targetRef="Gateway_Cloud_Sync" />
+    <bpmn:sequenceFlow id="Flow_32" name="KHÔNG (Lỗi mạng)" sourceRef="Gateway_Cloud_Sync" targetRef="Task_Sync_Retry" />
+    <bpmn:sequenceFlow id="Flow_33" sourceRef="Task_Sync_Retry" targetRef="Gateway_Cloud_Sync" />
+    <bpmn:sequenceFlow id="Flow_34" name="CÓ (Đồng bộ thành công)" sourceRef="Gateway_Cloud_Sync" targetRef="End_Success" />
+    <bpmn:task id="Task_Update_Capacity" name="Task 1.4: Cập nhật cộng gộp không gian Bãi đệm vào tổng sức chứa hiện hành">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_Error_Beep" name="Task 4.3: PDA phát cảnh báo lỗi, yêu cầu nhân viên kiểm tra lại">
+      <bpmn:incoming>Flow_28</bpmn:incoming>
+      <bpmn:outgoing>Flow_29</bpmn:outgoing>
+    </bpmn:task>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_wms_capacity">
+      <bpmndi:BPMNShape id="Participant_wms_capacity_di" bpmnElement="Participant_wms_capacity" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="2850" height="1200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_warehouse_operator_di" bpmnElement="Lane_warehouse_operator" isHorizontal="true">
+        <dc:Bounds x="180" y="980" width="2820" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_warehouse_manager_di" bpmnElement="Lane_warehouse_manager" isHorizontal="true">
+        <dc:Bounds x="180" y="580" width="2820" height="400" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_wms_system_di" bpmnElement="Lane_wms_system" isHorizontal="true">
+        <dc:Bounds x="180" y="80" width="2820" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Forecast_di" bpmnElement="Start_Forecast">
+        <dc:Bounds x="222" y="180" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="202" y="221" width="76" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Calc_Occupancy_di" bpmnElement="Task_Calc_Occupancy">
+        <dc:Bounds x="300" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Occupancy_Threshold_di" bpmnElement="Gateway_Occupancy_Threshold" isMarkerVisible="true">
+        <dc:Bounds x="460" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="445" y="107" width="81" height="66" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Analyze_Characteristics_di" bpmnElement="Task_Analyze_Characteristics">
+        <dc:Bounds x="870" y="158" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Special_Storage_di" bpmnElement="Gateway_Special_Storage" isMarkerVisible="true">
+        <dc:Bounds x="1030" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1012" y="97" width="87" height="66" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Assign_Secure_di" bpmnElement="Task_Assign_Secure">
+        <dc:Bounds x="1005" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Assign_Standard_di" bpmnElement="Task_Assign_Standard">
+        <dc:Bounds x="1170" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Slot_Full_di" bpmnElement="Gateway_Slot_Full" isMarkerVisible="true">
+        <dc:Bounds x="1330" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1313" y="107" width="85" height="66" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Find_Alt_Slot_di" bpmnElement="Task_Find_Alt_Slot">
+        <dc:Bounds x="1305" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ABC_Analysis_di" bpmnElement="Task_ABC_Analysis">
+        <dc:Bounds x="1470" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Misplaced_Items_di" bpmnElement="Gateway_Misplaced_Items" isMarkerVisible="true">
+        <dc:Bounds x="1630" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1614" y="113" width="82" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Relocation_Plan_di" bpmnElement="Task_Relocation_Plan">
+        <dc:Bounds x="1605" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Impact_Check_di" bpmnElement="Gateway_Impact_Check" isMarkerVisible="true">
+        <dc:Bounds x="1770" y="305" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1753" y="237" width="84" height="66" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_WMS_Send_Command_di" bpmnElement="Task_WMS_Send_Command">
+        <dc:Bounds x="2120" y="158" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Barcode_Match_di" bpmnElement="Gateway_Barcode_Match" isMarkerVisible="true">
+        <dc:Bounds x="2280" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2264" y="97" width="82" height="66" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Update_Inventory_di" bpmnElement="Task_Update_Inventory">
+        <dc:Bounds x="2440" y="158" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Cloud_Sync_di" bpmnElement="Gateway_Cloud_Sync" isMarkerVisible="true">
+        <dc:Bounds x="2600" y="173" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2581" y="107" width="88" height="66" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Sync_Retry_di" bpmnElement="Task_Sync_Retry">
+        <dc:Bounds x="2575" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Success_di" bpmnElement="End_Success">
+        <dc:Bounds x="2760" y="180" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2740" y="221" width="76" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Assess_Buffer_di" bpmnElement="Task_Assess_Buffer">
+        <dc:Bounds x="560" y="670" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Buffer_Capacity_di" bpmnElement="Gateway_Buffer_Capacity" isMarkerVisible="true">
+        <dc:Bounds x="710" y="685" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="770" y="683" width="80" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Notify_Bottleneck_di" bpmnElement="Task_Notify_Bottleneck">
+        <dc:Bounds x="710" y="800" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Bottleneck_di" bpmnElement="End_Bottleneck">
+        <dc:Bounds x="860" y="822" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="840" y="863" width="76" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Postpone_Relocation_di" bpmnElement="Task_Postpone_Relocation">
+        <dc:Bounds x="1745" y="670" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Approve_Relocation_di" bpmnElement="Task_Approve_Relocation">
+        <dc:Bounds x="1910" y="670" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Operator_Move_di" bpmnElement="Task_Operator_Move">
+        <dc:Bounds x="2120" y="1090" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Update_Capacity_di" bpmnElement="Task_Update_Capacity">
+        <dc:Bounds x="650" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Error_Beep_di" bpmnElement="Task_Error_Beep">
+        <dc:Bounds x="2200" y="360" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="258" y="198" />
+        <di:waypoint x="300" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="400" y="198" />
+        <di:waypoint x="460" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="485" y="223" />
+        <di:waypoint x="485" y="710" />
+        <di:waypoint x="560" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="660" y="710" />
+        <di:waypoint x="710" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="735" y="735" />
+        <di:waypoint x="735" y="800" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="745" y="758" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="810" y="840" />
+        <di:waypoint x="860" y="840" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="735" y="685" />
+        <di:waypoint x="735" y="528" />
+        <di:waypoint x="675" y="528" />
+        <di:waypoint x="675" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="693" y="441" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="750" y="330" />
+        <di:waypoint x="810" y="330" />
+        <di:waypoint x="810" y="198" />
+        <di:waypoint x="870" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="510" y="198" />
+        <di:waypoint x="870" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="970" y="198" />
+        <di:waypoint x="1030" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1055" y="223" />
+        <di:waypoint x="1055" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1105" y="330" />
+        <di:waypoint x="1140" y="330" />
+        <di:waypoint x="1140" y="198" />
+        <di:waypoint x="1330" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1080" y="198" />
+        <di:waypoint x="1170" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <di:waypoint x="1270" y="198" />
+        <di:waypoint x="1330" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15">
+        <di:waypoint x="1355" y="223" />
+        <di:waypoint x="1355" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16">
+        <di:waypoint x="1405" y="330" />
+        <di:waypoint x="1440" y="330" />
+        <di:waypoint x="1440" y="198" />
+        <di:waypoint x="1380" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17">
+        <di:waypoint x="1380" y="198" />
+        <di:waypoint x="1470" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18">
+        <di:waypoint x="1570" y="198" />
+        <di:waypoint x="1630" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19">
+        <di:waypoint x="1680" y="198" />
+        <di:waypoint x="2120" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_20_di" bpmnElement="Flow_20">
+        <di:waypoint x="1655" y="223" />
+        <di:waypoint x="1655" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1670" y="247" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_21_di" bpmnElement="Flow_21">
+        <di:waypoint x="1705" y="330" />
+        <di:waypoint x="1770" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_22_di" bpmnElement="Flow_22">
+        <di:waypoint x="1795" y="355" />
+        <di:waypoint x="1795" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1715" y="503" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_23_di" bpmnElement="Flow_23">
+        <di:waypoint x="1845" y="710" />
+        <di:waypoint x="1870" y="710" />
+        <di:waypoint x="1870" y="198" />
+        <di:waypoint x="2120" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_24_di" bpmnElement="Flow_24">
+        <di:waypoint x="1820" y="330" />
+        <di:waypoint x="1960" y="330" />
+        <di:waypoint x="1960" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1937" y="296" width="66" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_25_di" bpmnElement="Flow_25">
+        <di:waypoint x="2010" y="710" />
+        <di:waypoint x="2060" y="710" />
+        <di:waypoint x="2060" y="198" />
+        <di:waypoint x="2120" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_26_di" bpmnElement="Flow_26">
+        <di:waypoint x="2170" y="238" />
+        <di:waypoint x="2170" y="1090" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_27_di" bpmnElement="Flow_27">
+        <di:waypoint x="2220" y="1130" />
+        <di:waypoint x="2350" y="1130" />
+        <di:waypoint x="2350" y="198" />
+        <di:waypoint x="2330" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_28_di" bpmnElement="Flow_28">
+        <di:waypoint x="2305" y="223" />
+        <di:waypoint x="2305" y="292" />
+        <di:waypoint x="2250" y="292" />
+        <di:waypoint x="2250" y="360" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2260" y="326" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_29_di" bpmnElement="Flow_29">
+        <di:waypoint x="2200" y="400" />
+        <di:waypoint x="2170" y="400" />
+        <di:waypoint x="2170" y="1090" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_30_di" bpmnElement="Flow_30">
+        <di:waypoint x="2330" y="198" />
+        <di:waypoint x="2440" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_31_di" bpmnElement="Flow_31">
+        <di:waypoint x="2540" y="198" />
+        <di:waypoint x="2600" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_32_di" bpmnElement="Flow_32">
+        <di:waypoint x="2625" y="223" />
+        <di:waypoint x="2625" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2559" y="240" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_33_di" bpmnElement="Flow_33">
+        <di:waypoint x="2675" y="330" />
+        <di:waypoint x="2710" y="330" />
+        <di:waypoint x="2710" y="198" />
+        <di:waypoint x="2650" y="198" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_34_di" bpmnElement="Flow_34">
+        <di:waypoint x="2650" y="198" />
+        <di:waypoint x="2760" y="198" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
