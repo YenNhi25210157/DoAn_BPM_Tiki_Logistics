@@ -1,5 +1,4 @@
 # BỘ CÂU HỎI PHỎNG VẤN & KỊCH BẢN WORKSHOP - TIKI LOGISTICS
-*(Dữ liệu phục vụ phân tích Quy trình nghiệp vụ BPM - Khảo sát As-Is)*
 
 ---
 
