@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_5x9k2p" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.22.0">
+  <bpmn:collaboration id="Collab_CS_8v2">
+    <bpmn:participant id="Part_CS_3d7" name="Quy trình CSKH và Giải quyết Khiếu nại (Customer Service)" processRef="Proc_CS_1b8" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_CS_1b8" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_CS_5m">
+      <bpmn:lane id="Lane_Cust_2x" name="Khách hàng / Người bán">
+        <bpmn:flowNodeRef>Start_8f3a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_8e9a</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sys_7y" name="Hệ thống Ticket &#38; Tổng đài">
+        <bpmn:flowNodeRef>Act_2b9c</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_5d7f</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_2c4b</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_CS_4z" name="Nhân viên CS (Tuyến 1)">
+        <bpmn:flowNodeRef>Act_7e1d</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_4a5b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_1c8e</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_9b4c</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_Merge_6d</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Ops_9w" name="Bộ phận Điều tra (Kho vận)">
+        <bpmn:flowNodeRef>Act_3f2a</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_8f3a" name="Gửi khiếu nại (Mất hàng, trễ...)">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Act_2b9c" name="Tự động phân loại &#38; Sinh mã CS Ticket">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_7e1d" name="Tra cứu vết vận đơn trên WMS/TMS">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gate_4a5b" name="Mức độ phức tạp?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4_No</bpmn:outgoing>
+      <bpmn:outgoing>Flow_6_Yes</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Act_1c8e" name="Phản hồi trực tiếp, giải đáp thông tin">
+      <bpmn:incoming>Flow_4_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_3f2a" name="Trích xuất camera, xác minh lỗi vận hành">
+      <bpmn:incoming>Flow_6_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_9b4c" name="Phê duyệt phương án đền bù / giao bù">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gate_Merge_6d">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Act_5d7f" name="Gửi thông báo kết quả giải quyết">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_8e9a" name="Nhận kết quả &#38; Đánh giá CSAT">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_2c4b" name="Đóng Ticket &#38; Lưu báo cáo">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_8f3a" targetRef="Act_2b9c" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Act_2b9c" targetRef="Act_7e1d" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Act_7e1d" targetRef="Gate_4a5b" />
+    <bpmn:sequenceFlow id="Flow_4_No" name="Đơn giản" sourceRef="Gate_4a5b" targetRef="Act_1c8e" />
+    <bpmn:sequenceFlow id="Flow_6_Yes" name="Mất mát/Hư hỏng" sourceRef="Gate_4a5b" targetRef="Act_3f2a" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Act_1c8e" targetRef="Gate_Merge_6d" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Act_3f2a" targetRef="Act_9b4c" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Act_9b4c" targetRef="Gate_Merge_6d" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Gate_Merge_6d" targetRef="Act_5d7f" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Act_5d7f" targetRef="Act_8e9a" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Act_8e9a" targetRef="End_2c4b" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_CS">
+    <bpmndi:BPMNPlane id="BPMNPlane_CS" bpmnElement="Collab_CS_8v2">
+      <bpmndi:BPMNShape id="Part_CS_3d7_di" bpmnElement="Part_CS_3d7" isHorizontal="true">
+        <dc:Bounds x="123" y="71" width="1287" height="664" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Cust_2x_di" bpmnElement="Lane_Cust_2x" isHorizontal="true">
+        <dc:Bounds x="153" y="71" width="1257" height="143" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sys_7y_di" bpmnElement="Lane_Sys_7y" isHorizontal="true">
+        <dc:Bounds x="153" y="214" width="1257" height="152" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_CS_4z_di" bpmnElement="Lane_CS_4z" isHorizontal="true">
+        <dc:Bounds x="153" y="366" width="1257" height="211" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Ops_9w_di" bpmnElement="Lane_Ops_9w" isHorizontal="true">
+        <dc:Bounds x="153" y="577" width="1257" height="158" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_8f3a_di" bpmnElement="Start_8f3a">
+        <dc:Bounds x="211" y="119" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="188" y="161" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_2b9c_di" bpmnElement="Act_2b9c">
+        <dc:Bounds x="303" y="241" width="103" height="79" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_7e1d_di" bpmnElement="Act_7e1d">
+        <dc:Bounds x="299" y="417" width="101" height="83" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_4a5b_di" bpmnElement="Gate_4a5b" isMarkerVisible="true">
+        <dc:Bounds x="463" y="431" width="49" height="51" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="448" y="488" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_1c8e_di" bpmnElement="Act_1c8e">
+        <dc:Bounds x="577" y="381" width="97" height="78" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_3f2a_di" bpmnElement="Act_3f2a">
+        <dc:Bounds x="573" y="613" width="101" height="79" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_9b4c_di" bpmnElement="Act_9b4c">
+        <dc:Bounds x="761" y="461" width="99" height="79" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_Merge_6d_di" bpmnElement="Gate_Merge_6d" isMarkerVisible="true">
+        <dc:Bounds x="907" y="433" width="51" height="49" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_5d7f_di" bpmnElement="Act_5d7f">
+        <dc:Bounds x="1013" y="243" width="98" height="81" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_8e9a_di" bpmnElement="Act_8e9a">
+        <dc:Bounds x="1147" y="113" width="99" height="79" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_2c4b_di" bpmnElement="End_2c4b">
+        <dc:Bounds x="1311" y="267" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1295" y="311" width="71" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="247" y="137" />
+        <di:waypoint x="354" y="137" />
+        <di:waypoint x="354" y="241" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="354" y="320" />
+        <di:waypoint x="354" y="417" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="400" y="458" />
+        <di:waypoint x="463" y="458" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_No_di" bpmnElement="Flow_4_No">
+        <di:waypoint x="488" y="432" />
+        <di:waypoint x="488" y="420" />
+        <di:waypoint x="577" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="495" y="401" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_Yes_di" bpmnElement="Flow_6_Yes">
+        <di:waypoint x="488" y="482" />
+        <di:waypoint x="488" y="652" />
+        <di:waypoint x="573" y="652" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="464" y="557" width="87" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="674" y="420" />
+        <di:waypoint x="932" y="420" />
+        <di:waypoint x="932" y="433" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="674" y="652" />
+        <di:waypoint x="810" y="652" />
+        <di:waypoint x="810" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="860" y="500" />
+        <di:waypoint x="932" y="500" />
+        <di:waypoint x="932" y="482" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="958" y="457" />
+        <di:waypoint x="1062" y="457" />
+        <di:waypoint x="1062" y="324" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1062" y="243" />
+        <di:waypoint x="1062" y="152" />
+        <di:waypoint x="1147" y="152" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1246" y="152" />
+        <di:waypoint x="1329" y="152" />
+        <di:waypoint x="1329" y="267" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
