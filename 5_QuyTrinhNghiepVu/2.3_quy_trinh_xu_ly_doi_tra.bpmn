@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_8k2m9vq" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.22.0">
+  <bpmn:collaboration id="Collab_1p4x9n2">
+    <bpmn:participant id="Part_Rtn_3d8" name="Quy trình Xử lý đổi trả và Hoàn hàng lỗi (Returns Processing)" processRef="Proc_Rtn_9f1" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_Rtn_9f1" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_5m2b8z">
+      <bpmn:lane id="Lane_Cust_2v1" name="Khách hàng (Shopper)">
+        <bpmn:flowNodeRef>Start_8n4m2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Fail_7x</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sys_6c4" name="Hệ thống WMS / OMS">
+        <bpmn:flowNodeRef>Act_Sys_1q</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_Sys_4w</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_Sys_9k</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_QC_9x2" name="Nhân viên Kiểm định (QC Kho)">
+        <bpmn:flowNodeRef>Act_QC_2m</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_QC_5b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_Cond_3z</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_QC_8v</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_QC_1p</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Fin_3n8" name="Kế toán đối soát">
+        <bpmn:flowNodeRef>Act_Fin_6t</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Succ_2y</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_8n4m2" name="Tạo yêu cầu hoàn trả trên App">
+      <bpmn:outgoing>Flow_1_7n3</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Act_Sys_1q" name="Tiếp nhận &#38; Tự động sinh mã RMA">
+      <bpmn:incoming>Flow_1_7n3</bpmn:incoming>
+      <bpmn:outgoing>Flow_2_9b4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_QC_2m" name="Nhận hàng hoàn &#38; Quét mã PDA">
+      <bpmn:incoming>Flow_2_9b4</bpmn:incoming>
+      <bpmn:outgoing>Flow_3_2m5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_QC_5b" name="Mở hộp kiểm tra ngoại quan &#38; kỹ thuật">
+      <bpmn:incoming>Flow_3_2m5</bpmn:incoming>
+      <bpmn:outgoing>Flow_4_8v1</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gate_Cond_3z" name="Tình trạng thực tế?">
+      <bpmn:incoming>Flow_4_8v1</bpmn:incoming>
+      <bpmn:outgoing>Flow_5_Fail</bpmn:outgoing>
+      <bpmn:outgoing>Flow_6_Good</bpmn:outgoing>
+      <bpmn:outgoing>Flow_7_Bad</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Act_Sys_4w" name="Cập nhật từ chối &#38; Khóa luồng">
+      <bpmn:incoming>Flow_5_Fail</bpmn:incoming>
+      <bpmn:outgoing>Flow_8_EndF</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_Fail_7x" name="Bác bỏ khiếu nại (Gian lận)">
+      <bpmn:incoming>Flow_8_EndF</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Act_QC_8v" name="Dán nhãn Restock &#38; Đưa lên kệ">
+      <bpmn:incoming>Flow_6_Good</bpmn:incoming>
+      <bpmn:outgoing>Flow_9_Upd</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_QC_1p" name="Lưu lồng sắt chờ bảo hành/Tiêu hủy">
+      <bpmn:incoming>Flow_7_Bad</bpmn:incoming>
+      <bpmn:outgoing>Flow_10_Upd</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_Sys_9k" name="Đồng bộ trừ tồn / Tái nhập kho WMS">
+      <bpmn:incoming>Flow_9_Upd</bpmn:incoming>
+      <bpmn:incoming>Flow_10_Upd</bpmn:incoming>
+      <bpmn:outgoing>Flow_11_Fin</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_Fin_6t" name="Xác nhận lỗi &#38; Chuyển lệnh Hoàn tiền (Refund)">
+      <bpmn:incoming>Flow_11_Fin</bpmn:incoming>
+      <bpmn:outgoing>Flow_12_EndS</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Succ_2y" name="Hoàn tiền &#38; Đóng mã RMA">
+      <bpmn:incoming>Flow_12_EndS</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1_7n3" sourceRef="Start_8n4m2" targetRef="Act_Sys_1q" />
+    <bpmn:sequenceFlow id="Flow_2_9b4" sourceRef="Act_Sys_1q" targetRef="Act_QC_2m" />
+    <bpmn:sequenceFlow id="Flow_3_2m5" sourceRef="Act_QC_2m" targetRef="Act_QC_5b" />
+    <bpmn:sequenceFlow id="Flow_4_8v1" sourceRef="Act_QC_5b" targetRef="Gate_Cond_3z" />
+    <bpmn:sequenceFlow id="Flow_5_Fail" name="Tráo hàng/Sai quy định" sourceRef="Gate_Cond_3z" targetRef="Act_Sys_4w" />
+    <bpmn:sequenceFlow id="Flow_8_EndF" sourceRef="Act_Sys_4w" targetRef="Event_Fail_7x" />
+    <bpmn:sequenceFlow id="Flow_6_Good" name="Còn mới nguyên" sourceRef="Gate_Cond_3z" targetRef="Act_QC_8v" />
+    <bpmn:sequenceFlow id="Flow_7_Bad" name="Lỗi NSX/Vận chuyển" sourceRef="Gate_Cond_3z" targetRef="Act_QC_1p" />
+    <bpmn:sequenceFlow id="Flow_9_Upd" sourceRef="Act_QC_8v" targetRef="Act_Sys_9k" />
+    <bpmn:sequenceFlow id="Flow_10_Upd" sourceRef="Act_QC_1p" targetRef="Act_Sys_9k" />
+    <bpmn:sequenceFlow id="Flow_11_Fin" sourceRef="Act_Sys_9k" targetRef="Act_Fin_6t" />
+    <bpmn:sequenceFlow id="Flow_12_EndS" sourceRef="Act_Fin_6t" targetRef="End_Succ_2y" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Rtn">
+    <bpmndi:BPMNPlane id="BPMNPlane_Rtn" bpmnElement="Collab_1p4x9n2">
+      <bpmndi:BPMNShape id="Part_Rtn_3d8_di" bpmnElement="Part_Rtn_3d8" isHorizontal="true">
+        <dc:Bounds x="131" y="62" width="1083" height="614" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Cust_2v1_di" bpmnElement="Lane_Cust_2v1" isHorizontal="true">
+        <dc:Bounds x="161" y="62" width="1053" height="137" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sys_6c4_di" bpmnElement="Lane_Sys_6c4" isHorizontal="true">
+        <dc:Bounds x="161" y="199" width="1053" height="151" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_QC_9x2_di" bpmnElement="Lane_QC_9x2" isHorizontal="true">
+        <dc:Bounds x="161" y="350" width="1053" height="182" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Fin_3n8_di" bpmnElement="Lane_Fin_3n8" isHorizontal="true">
+        <dc:Bounds x="161" y="532" width="1053" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_8n4m2_di" bpmnElement="Start_8n4m2">
+        <dc:Bounds x="214" y="117" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="193" y="161" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Sys_1q_di" bpmnElement="Act_Sys_1q">
+        <dc:Bounds x="296" y="234" width="97" height="78" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_QC_2m_di" bpmnElement="Act_QC_2m">
+        <dc:Bounds x="293" y="392" width="101" height="81" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_QC_5b_di" bpmnElement="Act_QC_5b">
+        <dc:Bounds x="443" y="391" width="98" height="79" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_Cond_3z_di" bpmnElement="Gate_Cond_3z" isMarkerVisible="true">
+        <dc:Bounds x="591" y="406" width="48" height="49" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="648" y="422" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Sys_4w_di" bpmnElement="Act_Sys_4w">
+        <dc:Bounds x="567" y="235" width="96" height="79" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Fail_7x_di" bpmnElement="Event_Fail_7x">
+        <dc:Bounds x="598" y="118" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="583" y="86" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_QC_8v_di" bpmnElement="Act_QC_8v">
+        <dc:Bounds x="734" y="367" width="97" height="79" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_QC_1p_di" bpmnElement="Act_QC_1p">
+        <dc:Bounds x="733" y="468" width="99" height="78" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Sys_9k_di" bpmnElement="Act_Sys_9k">
+        <dc:Bounds x="876" y="236" width="102" height="77" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Fin_6t_di" bpmnElement="Act_Fin_6t">
+        <dc:Bounds x="877" y="561" width="99" height="78" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Succ_2y_di" bpmnElement="End_Succ_2y">
+        <dc:Bounds x="1054" y="583" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1039" y="627" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_7n3_di" bpmnElement="Flow_1_7n3">
+        <di:waypoint x="250" y="135" />
+        <di:waypoint x="344" y="135" />
+        <di:waypoint x="344" y="234" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_9b4_di" bpmnElement="Flow_2_9b4">
+        <di:waypoint x="344" y="312" />
+        <di:waypoint x="344" y="392" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_2m5_di" bpmnElement="Flow_3_2m5">
+        <di:waypoint x="394" y="432" />
+        <di:waypoint x="443" y="432" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_8v1_di" bpmnElement="Flow_4_8v1">
+        <di:waypoint x="541" y="430" />
+        <di:waypoint x="591" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_Fail_di" bpmnElement="Flow_5_Fail">
+        <di:waypoint x="615" y="406" />
+        <di:waypoint x="615" y="314" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="532" y="362" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_EndF_di" bpmnElement="Flow_8_EndF">
+        <di:waypoint x="615" y="235" />
+        <di:waypoint x="615" y="154" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_Good_di" bpmnElement="Flow_6_Good">
+        <di:waypoint x="615" y="455" />
+        <di:waypoint x="615" y="488" />
+        <di:waypoint x="674" y="488" />
+        <di:waypoint x="674" y="406" />
+        <di:waypoint x="734" y="406" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="635" y="386" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_Bad_di" bpmnElement="Flow_7_Bad">
+        <di:waypoint x="615" y="455" />
+        <di:waypoint x="615" y="507" />
+        <di:waypoint x="733" y="507" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="626" y="513" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_Upd_di" bpmnElement="Flow_9_Upd">
+        <di:waypoint x="831" y="406" />
+        <di:waypoint x="927" y="406" />
+        <di:waypoint x="927" y="313" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_Upd_di" bpmnElement="Flow_10_Upd">
+        <di:waypoint x="832" y="507" />
+        <di:waypoint x="927" y="507" />
+        <di:waypoint x="927" y="313" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_Fin_di" bpmnElement="Flow_11_Fin">
+        <di:waypoint x="927" y="313" />
+        <di:waypoint x="927" y="561" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_EndS_di" bpmnElement="Flow_12_EndS">
+        <di:waypoint x="976" y="600" />
+        <di:waypoint x="1054" y="600" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
