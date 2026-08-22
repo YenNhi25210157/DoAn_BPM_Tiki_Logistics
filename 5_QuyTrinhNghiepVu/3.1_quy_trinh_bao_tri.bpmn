@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_9d8k1n" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.22.0">
+  <bpmn:collaboration id="Collab_Fleet_7c">
+    <bpmn:participant id="Part_Fleet_2a" name="Quy trình Bảo trì và điều phối đội xe (Fleet Maintenance)" processRef="Proc_Fleet_4b" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_Fleet_4b" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Fleet_8">
+      <bpmn:lane id="Lane_Sys_1" name="Hệ thống Quản lý Đội xe">
+        <bpmn:flowNodeRef>Start_Alert_9</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_Sys_Tick_3</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_Sys_Upd_7</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Ready_5</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Mgr_2" name="Quản lý Đội xe (Dispatcher)">
+        <bpmn:flowNodeRef>Act_Mgr_Disp_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_Mgr_Appr_6</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Mech_3" name="Xưởng dịch vụ / Thợ máy">
+        <bpmn:flowNodeRef>Act_Mech_Insp_4</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_Severity_2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_Mech_Quick_8</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_Mech_Major_9</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gate_Merge_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Act_Mech_Test_2</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Alert_9" name="Cảnh báo đến hạn bảo dưỡng / Báo hỏng">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Act_Sys_Tick_3" name="Tự động sinh Maintenance Ticket">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_Mgr_Disp_1" name="Điều xe dự phòng trám tuyến giao hàng">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_Mgr_Appr_6" name="Duyệt lệnh đưa xe hỏng vào xưởng">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_Mech_Insp_4" name="Tiếp nhận &#38; Khám xe tổng quát">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gate_Severity_2" name="Mức độ hư hỏng?">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6_Minor</bpmn:outgoing>
+      <bpmn:outgoing>Flow_7_Major</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Act_Mech_Quick_8" name="Thay nhớt, bảo dưỡng nhẹ">
+      <bpmn:incoming>Flow_6_Minor</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_Mech_Major_9" name="Đại tu máy / Chờ phụ tùng">
+      <bpmn:incoming>Flow_7_Major</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gate_Merge_1">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Act_Mech_Test_2" name="Nghiệm thu an toàn kỹ thuật (QC)">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Act_Sys_Upd_7" name="Ghi nhận nhật ký &#38; Đổi trạng thái Sẵn sàng">
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="End_Ready_5" name="Xe sẵn sàng nhận chuyến mới">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_Alert_9" targetRef="Act_Sys_Tick_3" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Act_Sys_Tick_3" targetRef="Act_Mgr_Disp_1" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Act_Mgr_Disp_1" targetRef="Act_Mgr_Appr_6" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Act_Mgr_Appr_6" targetRef="Act_Mech_Insp_4" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Act_Mech_Insp_4" targetRef="Gate_Severity_2" />
+    <bpmn:sequenceFlow id="Flow_6_Minor" name="Bệnh nhẹ" sourceRef="Gate_Severity_2" targetRef="Act_Mech_Quick_8" />
+    <bpmn:sequenceFlow id="Flow_7_Major" name="Bệnh nặng" sourceRef="Gate_Severity_2" targetRef="Act_Mech_Major_9" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Act_Mech_Quick_8" targetRef="Gate_Merge_1" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Act_Mech_Major_9" targetRef="Gate_Merge_1" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Gate_Merge_1" targetRef="Act_Mech_Test_2" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Act_Mech_Test_2" targetRef="Act_Sys_Upd_7" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Act_Sys_Upd_7" targetRef="End_Ready_5" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Fleet">
+    <bpmndi:BPMNPlane id="BPMNPlane_Fleet" bpmnElement="Collab_Fleet_7c">
+      <bpmndi:BPMNShape id="Part_Fleet_2a_di" bpmnElement="Part_Fleet_2a" isHorizontal="true">
+        <dc:Bounds x="133" y="73" width="1245" height="547" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sys_1_di" bpmnElement="Lane_Sys_1" isHorizontal="true">
+        <dc:Bounds x="163" y="73" width="1215" height="152" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Mgr_2_di" bpmnElement="Lane_Mgr_2" isHorizontal="true">
+        <dc:Bounds x="163" y="225" width="1215" height="147" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Mech_3_di" bpmnElement="Lane_Mech_3" isHorizontal="true">
+        <dc:Bounds x="163" y="372" width="1215" height="248" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Alert_9_di" bpmnElement="Start_Alert_9">
+        <dc:Bounds x="211" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="194" y="175" width="71" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Sys_Tick_3_di" bpmnElement="Act_Sys_Tick_3">
+        <dc:Bounds x="303" y="108" width="98" height="82" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Mgr_Disp_1_di" bpmnElement="Act_Mgr_Disp_1">
+        <dc:Bounds x="302" y="259" width="102" height="78" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Mgr_Appr_6_di" bpmnElement="Act_Mgr_Appr_6">
+        <dc:Bounds x="453" y="258" width="101" height="79" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Mech_Insp_4_di" bpmnElement="Act_Mech_Insp_4">
+        <dc:Bounds x="454" y="456" width="99" height="78" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_Severity_2_di" bpmnElement="Gate_Severity_2" isMarkerVisible="true">
+        <dc:Bounds x="611" y="471" width="49" height="51" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="668" y="489" width="87" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Mech_Quick_8_di" bpmnElement="Act_Mech_Quick_8">
+        <dc:Bounds x="731" y="392" width="97" height="78" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Mech_Major_9_di" bpmnElement="Act_Mech_Major_9">
+        <dc:Bounds x="729" y="521" width="101" height="81" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gate_Merge_1_di" bpmnElement="Gate_Merge_1" isMarkerVisible="true">
+        <dc:Bounds x="877" y="472" width="48" height="49" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Mech_Test_2_di" bpmnElement="Act_Mech_Test_2">
+        <dc:Bounds x="971" y="457" width="103" height="77" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Act_Sys_Upd_7_di" bpmnElement="Act_Sys_Upd_7">
+        <dc:Bounds x="1121" y="112" width="98" height="79" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Ready_5_di" bpmnElement="End_Ready_5">
+        <dc:Bounds x="1271" y="133" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1249" y="176" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="247" y="150" />
+        <di:waypoint x="303" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="352" y="190" />
+        <di:waypoint x="352" y="259" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="404" y="298" />
+        <di:waypoint x="453" y="298" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="504" y="337" />
+        <di:waypoint x="504" y="456" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="553" y="495" />
+        <di:waypoint x="611" y="495" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_Minor_di" bpmnElement="Flow_6_Minor">
+        <di:waypoint x="635" y="471" />
+        <di:waypoint x="635" y="431" />
+        <di:waypoint x="731" y="431" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="653" y="413" width="46" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_Major_di" bpmnElement="Flow_7_Major">
+        <di:waypoint x="635" y="522" />
+        <di:waypoint x="635" y="561" />
+        <di:waypoint x="729" y="561" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="649" y="541" width="53" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="828" y="431" />
+        <di:waypoint x="901" y="431" />
+        <di:waypoint x="901" y="472" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="830" y="561" />
+        <di:waypoint x="901" y="561" />
+        <di:waypoint x="901" y="521" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="925" y="496" />
+        <di:waypoint x="971" y="496" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1022" y="457" />
+        <di:waypoint x="1022" y="151" />
+        <di:waypoint x="1121" y="151" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1219" y="151" />
+        <di:waypoint x="1271" y="151" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
